@@ -1,0 +1,133 @@
+## Multi Agent Outdated Report - Data is fetched, formatted, and reported for each agent type separately and sent in a single email with all reports attached
+## This template is most useful if you have a large amount of entities (to workaround the 100 kb/step limit of workflow automation)
+## See AGENTS variable in outdated_agents.js for all possible agentTypes available to report on
+
+name: outdated_agents_multiple_nrql
+description: 'Queries outdated agents by agent type and sends a single email with all CSV reports attached'
+workflowInputs:
+  emailDestinationId:
+    type: String
+    defaultValue: ''
+    validations:
+      - type: regex
+        errorMessage: destinationId must be a valid UUID
+        pattern: ^[a-fA-F0-9]{8}-([a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}$
+    required: true
+  accountId:
+    type: Int
+    defaultValue: 1
+    validations: []
+    required: true
+steps:
+  # JAVA agents
+  - name: getJavaAgents
+    type: action
+    action: newrelic.nrdb.query
+    version: 1
+    inputs:
+      accountIds:
+        - ${{ .workflowInputs.accountId }}
+      query: >-
+        FROM OutdatedAgentsTesting SELECT latest(accountName) as 'account',
+        latest(account_id) as 'accountId', latest(agentType) as 'agentType',
+        latest(entityName) as 'entity', latest(currentVersion) as 'currentVersion',
+        latest(currentVersionAgeInDays) as 'currentVersionAgeInDays',
+        latest(latestVersion) as 'latestVersion', latest(team) as 'team'
+        WHERE agentType = 'JAVA'
+        FACET entityGuid as 'guid' SINCE 1 day ago LIMIT MAX
+      selectors:
+        - name: results
+          expression: '[.results[] | del(.facet)]'
+  - name: transformJavaToCsv
+    type: action
+    action: utils.transform.toCSV
+    version: 1
+    inputs:
+      data: ${{ .steps.getJavaAgents.outputs.results | tostring }}
+      selectors:
+        - name: csv
+          expression: .csv
+
+  # DOTNET agents
+  - name: getDotnetAgents
+    type: action
+    action: newrelic.nrdb.query
+    version: 1
+    inputs:
+      accountIds:
+        - ${{ .workflowInputs.accountId }}
+      query: >-
+        FROM OutdatedAgentsTesting SELECT latest(accountName) as 'account',
+        latest(account_id) as 'accountId', latest(agentType) as 'agentType',
+        latest(entityName) as 'entity', latest(currentVersion) as 'currentVersion',
+        latest(currentVersionAgeInDays) as 'currentVersionAgeInDays',
+        latest(latestVersion) as 'latestVersion', latest(team) as 'team'
+        WHERE agentType = 'DOTNET'
+        FACET entityGuid as 'guid' SINCE 1 day ago LIMIT MAX
+      selectors:
+        - name: results
+          expression: '[.results[] | del(.facet)]'
+  - name: transformDotnetToCsv
+    type: action
+    action: utils.transform.toCSV
+    version: 1
+    inputs:
+      data: ${{ .steps.getDotnetAgents.outputs.results | tostring }}
+      selectors:
+        - name: csv
+          expression: .csv
+
+  # NODEJS agents
+  - name: getNodejsAgents
+    type: action
+    action: newrelic.nrdb.query
+    version: 1
+    inputs:
+      accountIds:
+        - ${{ .workflowInputs.accountId }}
+      query: >-
+        FROM OutdatedAgentsTesting SELECT latest(accountName) as 'account',
+        latest(account_id) as 'accountId', latest(agentType) as 'agentType',
+        latest(entityName) as 'entity', latest(currentVersion) as 'currentVersion',
+        latest(currentVersionAgeInDays) as 'currentVersionAgeInDays',
+        latest(latestVersion) as 'latestVersion', latest(team) as 'team'
+        WHERE agentType = 'NODEJS'
+        FACET entityGuid as 'guid' SINCE 1 day ago LIMIT MAX
+      selectors:
+        - name: results
+          expression: '[.results[] | del(.facet)]'
+  - name: transformNodejsToCsv
+    type: action
+    action: utils.transform.toCSV
+    version: 1
+    inputs:
+      data: ${{ .steps.getNodejsAgents.outputs.results | tostring }}
+      selectors:
+        - name: csv
+          expression: .csv
+
+  # Send single email with all attachments
+  - name: sendReport
+    type: action
+    action: newrelic.notification.sendEmail
+    version: 1
+    inputs:
+      destinationId: ${{ .workflowInputs.emailDestinationId }}
+      subject: New Relic Outdated Agents Report
+      message: >-
+        This is an automated report generated from New Relic.
+        See attached CSVs for lists of current outdated agents by type.
+      attachments:
+        - name: outdated_agents_java
+          type: RAW
+          filename: outdated_agents_JAVA.csv
+          content: ${{ .steps.transformJavaToCsv.outputs.csv }}
+        - name: outdated_agents_dotnet
+          type: RAW
+          filename: outdated_agents_DOTNET.csv
+          content: ${{ .steps.transformDotnetToCsv.outputs.csv }}
+        - name: outdated_agents_nodejs
+          type: RAW
+          filename: outdated_agents_NODEJS.csv
+          content: ${{ .steps.transformNodejsToCsv.outputs.csv }}
+    next: end

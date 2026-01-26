@@ -1,0 +1,74 @@
+## Single Agent Outdated Report - Data is fetched for all agentTypes in a single NRQL query
+## This template is most useful if you have a small to medium amount of entities (<1k entities)
+
+name: outdated_agents_single_nrql
+description: 'Queries outdated agents in a single nrql query and sends a single email with the results attached as a CSV'
+workflowInputs:
+  emailDestinationId:
+    type: String
+    defaultValue: ''
+    validations:
+      - type: regex
+        errorMessage: destinationId must be a valid UUID
+        pattern: ^[a-fA-F0-9]{8}-([a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}$
+    required: true
+  accountId:
+    type: Int
+    defaultValue: 1
+    validations: []
+    required: true
+  nrql:
+    type: String
+    defaultValue: >-
+      FROM OutdatedAgentsTesting SELECT latest(accountName) as 'account',
+      latest(account_id) as 'accountId', latest(agentType) as 'agentType',
+      latest(entityName) as 'entity', latest(currentVersion) as
+      'currentVersion', latest(currentVersionAgeInDays) as
+      'currentVersionAgeInDays', latest(latestVersion) as 'latestVersion',
+      latest(team) as 'team' facet entityGuid as 'guid' since 1 day ago LIMIT
+      MAX
+    validations: []
+    required: true
+steps:
+  - name: getOutdatedAgents
+    type: action
+    action: newrelic.nrdb.query
+    version: 1
+    inputs:
+      accountIds:
+        - ${{ .workflowInputs.accountId }}
+      query: ${{ .workflowInputs.nrql }}
+      selectors:
+        - name: results
+          expression: '[.results[] | del(.facet)]'
+  - name: validateResults
+    type: switch
+    switch:
+      - condition: ${{ .steps.getOutdatedAgents.outputs.results | length < 1 }}
+        next: end
+    next: transformToCsv
+  - name: transformToCsv
+    type: action
+    action: utils.transform.toCSV
+    version: 1
+    inputs:
+      data: ${{ .steps.getOutdatedAgents.outputs.results | tostring }}
+      selectors:
+        - name: csv
+          expression: .csv
+  - name: sendReport
+    type: action
+    action: newrelic.notification.sendEmail
+    version: 1
+    inputs:
+      destinationId: ${{ .workflowInputs.emailDestinationId }}
+      subject: New Relic Outdated Agents
+      message: >-
+        This is an automated report generated from New Relic. See attached csv
+        for list of current outdated agents.
+      attachments:
+        - name: outdated_agents
+          type: RAW
+          filename: outdated_agents.csv
+          content: ${{ .steps.transformToCsv.outputs.csv }}
+    next: end
