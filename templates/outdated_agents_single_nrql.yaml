@@ -30,32 +30,6 @@ workflowInputs:
     validations: []
     required: true
 steps:
-  - name: getOutdatedAgents
-    type: action
-    action: newrelic.nrdb.query
-    version: 1
-    inputs:
-      accountIds:
-        - ${{ .workflowInputs.accountId }}
-      query: ${{ .workflowInputs.nrql }}
-      selectors:
-        - name: results
-          expression: '[.results[] | del(.facet)]'
-  - name: validateResults
-    type: switch
-    switch:
-      - condition: ${{ .steps.getOutdatedAgents.outputs.results | length < 1 }}
-        next: end
-    next: transformToCsv
-  - name: transformToCsv
-    type: action
-    action: utils.transform.toCSV
-    version: 1
-    inputs:
-      data: ${{ .steps.getOutdatedAgents.outputs.results | tostring }}
-      selectors:
-        - name: csv
-          expression: .csv
   - name: sendReport
     type: action
     action: newrelic.notification.sendEmail
@@ -68,7 +42,8 @@ steps:
         for list of current outdated agents.
       attachments:
         - name: outdated_agents
-          type: RAW
+          type: QUERY
+          query: ${{ .workflowInputs.nrql }}
+          format: CSV
           filename: outdated_agents.csv
-          content: ${{ .steps.transformToCsv.outputs.csv }}
     next: end
