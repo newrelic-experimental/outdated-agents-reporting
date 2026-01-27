@@ -5,7 +5,9 @@
 Capability to determine and report on outdated agents across New Relic. Consists of 2 solutions:
 
 1. Synthetic API Scripted Monitor that fetches, aggregates, and reports outdated agents to a custom eventType - `OutdatedAgents`
-2. A workflow automation template to periodically send out an email report (an attached csv) containing the results of the Synthetic API monitor.
+2. Workflow automation templates to periodically send out email report(s) containing the results of querying the events emitted by the Synthetic script.
+
+**NOTE: An alternative solution to workflow automation is [Scheduled NRQL Searches](https://docs.newrelic.com/docs/nrql/using-nrql/schedule-nrql-searches/). Skip workflow template sections below if using this feature. This feature is preferred over workflow automation**
 
 ## Pre-requirements
 
@@ -29,7 +31,6 @@ Capability to determine and report on outdated agents across New Relic. Consists
 Required Inputs:
 - **emailDestinationId** - The ID of the email destination that contains recipients of the report. This can be found for a given destination on the destinations page under **Alerts**
 - **accountId** - The account in which the data being queried is reporting to
-- **nrql** - This only applies to [outdated_agents_single_nrql](./templates/outdated_agents_single_nrql.yaml). This is the query that fetches all details across all agentTypes
 
 ## Installation
 
@@ -77,7 +78,7 @@ mutation {
 
 
 ## Limitations
-- Each step output in a workflow automation template cannot exceed 100kb. If any workflow run errors occur related to this limit, adjust the provided base templates as needed (steps, nrql queries, etc) to fit your use cases/amount of entities.
+- The 5k NRQL row limit applies to scheduled searches. If your query against `OutdatedAgents` returns more than 5,000 rows, create multiple scheduled searches with finer grained nrql query filters. If using workflow automation templates, adjust the queries further with more fine grained filtering.
 
 ## Support
 
