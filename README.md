@@ -63,28 +63,21 @@ You can now run and [schedule the workflow](https://docs.newrelic.com/docs/workf
 
 ```
 mutation {
-    workflowAutomationCreateSchedule(
-      scope: { type: ACCOUNT id: "1" }
-      definition: { name: "outdated_agents_multiple_nrql" }
-      schedule: {
-        cronExpression: "0 12 * * *"
-        timezone: "America/New_York"
-        name: "daily-outdated-agent-reporting"
-        description: "Generate outdated agent report at noon every day"
-      }
-      workflowInputs: [
-        {key: "emailDestinationId" value: "123-456"}
-        {key: "accountId" value: 1}
-      ]
-    ) {
-      scheduleId
-    }
+  workflowAutomationCreateSchedule(
+    scope: {type: ACCOUNT, id: "1"}
+    definition: {name: "outdated_agents_multiple_nrql", version: 1}
+    workflowInputs: [{key: "emailDestinationId", value: "abc-1234-efg-567-xyz"}, {key: "accountId", value: 1}]
+    timezone: "America/New_York"
+    cronExpression: "0 12 * * *"
+  ) {
+    scheduleId
   }
+}
 ```
 
 
 ## Limitations
-- Each step output in a workflow automation template cannot exceed 100kb. If any workflow run errors occurr related to this, adjust the provided base templates as needed (steps, nrql queries, etc) to fit your use cases/amount of entities.
+- Each step output in a workflow automation template cannot exceed 100kb. If any workflow run errors occur related to this limit, adjust the provided base templates as needed (steps, nrql queries, etc) to fit your use cases/amount of entities.
 
 ## Support
 

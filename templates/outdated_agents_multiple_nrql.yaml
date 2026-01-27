@@ -28,7 +28,7 @@ steps:
       accountIds:
         - ${{ .workflowInputs.accountId }}
       query: >-
-        FROM OutdatedAgentsTesting SELECT latest(accountName) as 'account',
+        FROM OutdatedAgents SELECT latest(accountName) as 'account',
         latest(account_id) as 'accountId', latest(agentType) as 'agentType',
         latest(entityName) as 'entity', latest(currentVersion) as 'currentVersion',
         latest(currentVersionAgeInDays) as 'currentVersionAgeInDays',
@@ -57,7 +57,7 @@ steps:
       accountIds:
         - ${{ .workflowInputs.accountId }}
       query: >-
-        FROM OutdatedAgentsTesting SELECT latest(accountName) as 'account',
+        FROM OutdatedAgents SELECT latest(accountName) as 'account',
         latest(account_id) as 'accountId', latest(agentType) as 'agentType',
         latest(entityName) as 'entity', latest(currentVersion) as 'currentVersion',
         latest(currentVersionAgeInDays) as 'currentVersionAgeInDays',
@@ -86,7 +86,7 @@ steps:
       accountIds:
         - ${{ .workflowInputs.accountId }}
       query: >-
-        FROM OutdatedAgentsTesting SELECT latest(accountName) as 'account',
+        FROM OutdatedAgents SELECT latest(accountName) as 'account',
         latest(account_id) as 'accountId', latest(agentType) as 'agentType',
         latest(entityName) as 'entity', latest(currentVersion) as 'currentVersion',
         latest(currentVersionAgeInDays) as 'currentVersionAgeInDays',
@@ -115,7 +115,7 @@ steps:
       accountIds:
         - ${{ .workflowInputs.accountId }}
       query: >-
-        FROM OutdatedAgentsTesting SELECT latest(accountName) as 'account',
+        FROM OutdatedAgents SELECT latest(accountName) as 'account',
         latest(account_id) as 'accountId', latest(agentType) as 'agentType',
         latest(entityName) as 'entity', latest(currentVersion) as 'currentVersion',
         latest(currentVersionAgeInDays) as 'currentVersionAgeInDays',
