@@ -66,7 +66,7 @@ mutation {
   workflowAutomationCreateSchedule(
     scope: {type: ACCOUNT, id: "1"}
     definition: {name: "outdated_agents_multiple_nrql", version: 1}
-    workflowInputs: [{key: "emailDestinationId", value: "abc-1234-efg-567-xyz"}, {key: "accountId", value: 1}]
+    workflowInputs: [{key: "emailDestinationId", value: "abc-1234-efg-567-xyz"}, {key: "accountId", value: "1"}]
     timezone: "America/New_York"
     cronExpression: "0 12 * * *"
   ) {
