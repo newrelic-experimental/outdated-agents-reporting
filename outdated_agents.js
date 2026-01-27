@@ -36,7 +36,7 @@ const ENTITY_SEARCH_FILTER = "reporting is true"; // base filter for entity fetc
 // Constants [DO NOT CHANGE]
 const GRAPH_API = 'https://api.newrelic.com/graphql';
 const HEADERS = { 'Content-Type': 'application/json', 'Api-Key': USER_KEY };
-const EVENT_TYPE = "OutdatedAgentsTesting";
+const EVENT_TYPE = "OutdatedAgents";
 const MAX_CONCURRENCY = 25;
 
 async function main() {
