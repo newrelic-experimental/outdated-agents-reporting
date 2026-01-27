@@ -78,8 +78,9 @@ mutation {
 ```
 
 
-## Workflow Automation Limitations
+## Limitations
 - Each step output in a workflow automation template cannot exceed 100kb. If any workflow run errors occur related to this limit, adjust the provided base templates as needed (steps, nrql queries, etc) to fit your use cases/amount of entities.
+- The 5k NRQL row limit still applies to scheduled searches. If your query against `OutdatedAgents` returns more than 5,000 rows, create multiple scheduled searches with finer grained nrql query filters.
 
 ## Support
 
