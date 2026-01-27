@@ -5,7 +5,7 @@
 Capability to determine and report on outdated agents across New Relic. Consists of 2 solutions:
 
 1. Synthetic API Scripted Monitor that fetches, aggregates, and reports outdated agents to a custom eventType - `OutdatedAgents`
-2. A workflow automation template to periodically send out an email report (an attached csv) containing the results of the Synthetic API monitor.
+2. Workflow automation templates to periodically send out email report(s) (attached csv(s)) containing the results of querying the events emitted by the Synthetic script.
 
 **NOTE: An alternative solution to workflow automation is [Scheduled NRQL Searches](https://docs.newrelic.com/docs/nrql/using-nrql/schedule-nrql-searches/). Skip workflow template sections below if using this feature. This feature is preferred over workflow automation**
 
