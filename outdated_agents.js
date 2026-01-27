@@ -80,13 +80,12 @@ async function main() {
         }, {})
     );
 
-    // Fetch entities for each domain
+    // Fetch entities for each domain in parallel
     const domains = [...new Set(AGENTS.map(a => a.domain))];
-    let entitiesWithVersions = [];
-    for (const domain of domains) {
-        const domainEntities = await getEntities(null, [], domain);
-        entitiesWithVersions = entitiesWithVersions.concat(domainEntities);
-    }
+    const domainResults = await Promise.all(
+        domains.map(domain => getEntities(null, [], domain))
+    );
+    let entitiesWithVersions = domainResults.flat();
 
     // if mobile domain is present in AGENTS, extract mobile entities for separate version lookup
     const hasMobileDomain = AGENTS.some(a => a.domain === 'MOBILE');

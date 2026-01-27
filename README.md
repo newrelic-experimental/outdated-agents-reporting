@@ -59,7 +59,28 @@ To deploy one of these templates, follow the steps below, or if you want to auto
 5. Select `Update Canvas`
 6. Select `Save`
 
-You can now run and [schedule the workflow](https://docs.newrelic.com/docs/workflow-automation/create-a-workflow-automation/start-schedule/#scheduled) to periodically send out an email report to a defined alert destination.
+You can now run and [schedule the workflow](https://docs.newrelic.com/docs/workflow-automation/create-a-workflow-automation/start-schedule/#scheduled) to periodically send out an email report to a defined alert destination. Below is an example for scheduling one of the base templates daily at noon eastern time:
+
+```
+mutation {
+    workflowAutomationCreateSchedule(
+      scope: { type: ACCOUNT id: "1" }
+      definition: { name: "outdated_agents_multiple_nrql" }
+      schedule: {
+        cronExpression: "0 12 * * *"
+        timezone: "America/New_York"
+        name: "daily-outdated-agent-reporting"
+        description: "Generate outdated agent report at noon every day"
+      }
+      workflowInputs: [
+        {key: "emailDestinationId" value: "123-456"}
+        {key: "accountId" value: 1}
+      ]
+    ) {
+      scheduleId
+    }
+  }
+```
 
 
 ## Limitations
