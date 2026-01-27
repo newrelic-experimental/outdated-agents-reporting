@@ -36,7 +36,7 @@ const ENTITY_SEARCH_FILTER = "reporting is true"; // base filter for entity fetc
 // Constants [DO NOT CHANGE]
 const GRAPH_API = 'https://api.newrelic.com/graphql';
 const HEADERS = { 'Content-Type': 'application/json', 'Api-Key': USER_KEY };
-const EVENT_TYPE = "OutdatedAgents";
+const EVENT_TYPE = "OutdatedAgentsTesting";
 const MAX_CONCURRENCY = 25;
 
 async function main() {
@@ -102,7 +102,6 @@ async function main() {
         entitiesWithVersions = entitiesWithVersions.concat(mobileEntitiesWithVersions);
     }
     
-    // console.log(entitiesWithVersions);
     const outdated = processData(entitiesWithVersions, allVersionsFlat, latestAgentVersions);
 
     if (outdated && outdated.length > 0) {
@@ -156,14 +155,19 @@ async function getEntities(cursor = null, all = [], domain) {
                     values
                 }
                 domain
+                ... on BrowserApplicationEntityOutline {
+                    runningAgentVersions {
+                      maxVersion
+                      minVersion
+                    }
                 }
-                nextCursor
+               }
+              nextCursor
             }
-            }
+          }
         }
     }
     `;
-
 
   const opts = {
     url: GRAPH_API,
@@ -285,6 +289,10 @@ function processData(entities, agentVersions, latestVersions) {
             currentVersion = entity.agentVersion;
         }
 
+        if (entity.domain === 'BROWSER') {
+            currentVersion = _convertBrowserVersionToSemver(entity.runningAgentVersions?.maxVersion);
+        }
+
         if (_isVersionOutdated(currentVersion, latestVersion?.version)) {
             let currentVersionDetail = agentVersions.find(v => v.domain === entity.domain && v.version === currentVersion);
 
@@ -314,11 +322,45 @@ function processData(entities, agentVersions, latestVersions) {
     return outdatedAgents;
 };
 
+// Convert BROWSER version from whole number to version string
+// Versions <= 1227 use plain number format ("1216"), versions > 1227 use semver ("1.308.0")
+const _convertBrowserVersionToSemver = (versionNum) => {
+    if (!versionNum) return null;
+    const num = typeof versionNum === 'number' ? versionNum : parseInt(versionNum, 10);
+    
+    // Versions 1227 and earlier use plain number format
+    if (num <= 1227) {
+        return num.toString();
+    }
+    
+    // Versions after 1227 use semver format: 1308 -> "1.308.0"
+    const versionStr = num.toString();
+    const major = versionStr[0];
+    const minor = versionStr.substring(1);
+    return `${major}.${minor}.0`;
+};
+
 // Compare two version strings to determine if the current version is outdated
 const _isVersionOutdated = (currentVersion, latestVersion) => {
     if (!currentVersion || !latestVersion) return false;
-    const currentParts = currentVersion.split('.').map(Number);
-    const latestParts = latestVersion.split('.').map(Number);
+    
+    const currentStr = currentVersion.toString();
+    const latestStr = latestVersion.toString();
+    
+    // Handle BROWSER version format mismatch: old format (no dots) vs new format (with dots)
+    // Old format versions (<=1227) are always outdated compared to new semver format
+    const currentHasDots = currentStr.includes('.');
+    const latestHasDots = latestStr.includes('.');
+    if (!currentHasDots && latestHasDots) {
+        return true; // Old format is always outdated vs new semver format
+    }
+    if (currentHasDots && !latestHasDots) {
+        return false; // New format is never outdated vs old format
+    }
+    
+    // Same format comparison (either both old or both new)
+    const currentParts = currentStr.split('.').map(Number);
+    const latestParts = latestStr.split('.').map(Number);
     for (let i = 0; i < Math.max(currentParts.length, latestParts.length); i++) {
         const currentPart = currentParts[i] || 0;
         const latestPart = latestParts[i] || 0;
