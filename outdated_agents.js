@@ -9,8 +9,8 @@ const zlib = require('zlib');
 /* --------------------------------------------------------- */
 
 /* -------------------CONFIGURATION----------------- */
-const USER_KEY = "<user key>"; // User key to fetch data via GraphQL (NOTE: make this a secure credential)
-const INGEST_KEY = "<ingest key>"; // Ingest key to write events to NR [Keagan-Playground] (NOTE: make this a secure credential)
+const USER_KEY = "<user key>"; // User key to fetch data via GraphQL (NOTE: make this a secure credential in Synthetics)
+const INGEST_KEY = "<ingest key>"; // Ingest key to write events to NR (NOTE: make this a secure credential in Synthetics)
 const ACCOUNT_ID = 1; // Account ID to report events to
 
 // list of agents to check for outdated versions, comment out specific lines to exclude certain agents from the check
@@ -80,13 +80,12 @@ async function main() {
         }, {})
     );
 
-    // Fetch entities for each domain
+    // Fetch entities for each domain in parallel
     const domains = [...new Set(AGENTS.map(a => a.domain))];
-    let entitiesWithVersions = [];
-    for (const domain of domains) {
-        const domainEntities = await getEntities(null, [], domain);
-        entitiesWithVersions = entitiesWithVersions.concat(domainEntities);
-    }
+    const domainResults = await Promise.all(
+        domains.map(domain => getEntities(null, [], domain))
+    );
+    let entitiesWithVersions = domainResults.flat();
 
     // if mobile domain is present in AGENTS, extract mobile entities for separate version lookup
     const hasMobileDomain = AGENTS.some(a => a.domain === 'MOBILE');

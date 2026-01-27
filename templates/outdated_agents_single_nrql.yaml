@@ -1,5 +1,5 @@
 ## Single Agent Outdated Report - Data is fetched for all agentTypes in a single NRQL query
-## This template is most useful if you have a small to medium amount of entities (<1k entities)
+## This template is most useful if you have a small to medium amount of entities
 
 name: outdated_agents_single_nrql
 description: 'Queries outdated agents in a single nrql query and sends a single email with the results attached as a CSV'
@@ -20,7 +20,7 @@ workflowInputs:
   nrql:
     type: String
     defaultValue: >-
-      FROM OutdatedAgentsTesting SELECT latest(accountName) as 'account',
+      FROM OutdatedAgents SELECT latest(accountName) as 'account',
       latest(account_id) as 'accountId', latest(agentType) as 'agentType',
       latest(entityName) as 'entity', latest(currentVersion) as
       'currentVersion', latest(currentVersionAgeInDays) as

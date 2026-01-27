@@ -13,8 +13,8 @@ Capability to determine and report on outdated agents across New Relic. Consists
  - Fill in Configuration section of [outdated_agents.js](/outdated_agents.js)
 
 #### Configuration
- - A valid ingest key (to the account in which data will be reported to)
- - A valid user key (that has access to query data across all accounts)
+ - A valid ingest key (to the account in which data will be reported to) **NOTE: This should be added as a secure credential**
+ - A valid user key (that has access to query data across all accounts) **NOTE: This should be added as a secure credential**
  - Account ID (that ingest key was generated within)
  - Comment/uncommment sections of the desired `AGENTS` to collect outdated agents for
  - Add/remove `TAGS_TO_INCLUDE` - entity tags that will be fetched and appended to final output
@@ -24,6 +24,12 @@ Capability to determine and report on outdated agents across New Relic. Consists
 - Synthetic script is deployed, configured, and successfully sending data to New Relic.
 - An email destination configured with desired email addresses to recieve report(s).
 
+#### Configuration
+
+Required Inputs:
+- **emailDestinationId** - The ID of the email destination that contains recipients of the report. This can be found for a given destination on the destinations page under **Alerts**
+- **accountId** - The account in which the data being queried is reporting to
+- **nrql** - This only applies to [outdated_agents_single_nrql](./templates/outdated_agents_single_nrql.yaml). This is the query that fetches all details across all agentTypes
 
 ## Installation
 
@@ -44,8 +50,6 @@ There are several variations of a workflow template located under `../templates`
 - **> 5k**: [outdated_agents_multiple_nrql.yaml](./templates/outdated_agents_multiple_nrql.yaml) - Add/remove agent blocks depending on what agent types you want to obtain reports for. Fetches a single agent type per nrql query.
 - **< 5k**: [outdated_agents_single_nrql.yaml](/templates/outdated_agents_single_nrql.yaml) - Will fetch all agent types in a single query.
 
-It is recommended to modify steps as you see fit - this includes the email subject/body, inputs, nrql queries/blocks.
-
 To deploy one of these templates, follow the steps below, or if you want to automate deployment, see [API documentation here](https://docs.newrelic.com/docs/workflow-automation/workflow-automation-apis/create-workflow-definition/)
 
 1. Navigate to New Relic -> Workflow Automation UI
@@ -55,11 +59,25 @@ To deploy one of these templates, follow the steps below, or if you want to auto
 5. Select `Update Canvas`
 6. Select `Save`
 
-You can now run and [schedule the workflow](https://docs.newrelic.com/docs/workflow-automation/create-a-workflow-automation/start-schedule/#scheduled)
+You can now run and [schedule the workflow](https://docs.newrelic.com/docs/workflow-automation/create-a-workflow-automation/start-schedule/#scheduled) to periodically send out an email report to a defined alert destination. Below is an example for scheduling one of the base templates daily at noon eastern time:
+
+```
+mutation {
+  workflowAutomationCreateSchedule(
+    scope: {type: ACCOUNT, id: "1"}
+    definition: {name: "outdated_agents_multiple_nrql", version: 1}
+    workflowInputs: [{key: "emailDestinationId", value: "abc-1234-efg-567-xyz"}, {key: "accountId", value: "1"}]
+    timezone: "America/New_York"
+    cronExpression: "0 12 * * *"
+  ) {
+    scheduleId
+  }
+}
+```
 
 
 ## Limitations
-- Each step output in a workflow automation template cannot exceed 100kb - Adjust the provided base templates as needed (steps, nrql queries, etc) to fit your use cases/amount of entities.
+- Each step output in a workflow automation template cannot exceed 100kb. If any workflow run errors occur related to this limit, adjust the provided base templates as needed (steps, nrql queries, etc) to fit your use cases/amount of entities.
 
 ## Support
 

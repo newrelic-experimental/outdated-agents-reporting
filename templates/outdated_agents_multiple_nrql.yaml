@@ -28,7 +28,7 @@ steps:
       accountIds:
         - ${{ .workflowInputs.accountId }}
       query: >-
-        FROM OutdatedAgentsTesting SELECT latest(accountName) as 'account',
+        FROM OutdatedAgents SELECT latest(accountName) as 'account',
         latest(account_id) as 'accountId', latest(agentType) as 'agentType',
         latest(entityName) as 'entity', latest(currentVersion) as 'currentVersion',
         latest(currentVersionAgeInDays) as 'currentVersionAgeInDays',
@@ -57,7 +57,7 @@ steps:
       accountIds:
         - ${{ .workflowInputs.accountId }}
       query: >-
-        FROM OutdatedAgentsTesting SELECT latest(accountName) as 'account',
+        FROM OutdatedAgents SELECT latest(accountName) as 'account',
         latest(account_id) as 'accountId', latest(agentType) as 'agentType',
         latest(entityName) as 'entity', latest(currentVersion) as 'currentVersion',
         latest(currentVersionAgeInDays) as 'currentVersionAgeInDays',
@@ -86,7 +86,7 @@ steps:
       accountIds:
         - ${{ .workflowInputs.accountId }}
       query: >-
-        FROM OutdatedAgentsTesting SELECT latest(accountName) as 'account',
+        FROM OutdatedAgents SELECT latest(accountName) as 'account',
         latest(account_id) as 'accountId', latest(agentType) as 'agentType',
         latest(entityName) as 'entity', latest(currentVersion) as 'currentVersion',
         latest(currentVersionAgeInDays) as 'currentVersionAgeInDays',
@@ -102,6 +102,35 @@ steps:
     version: 1
     inputs:
       data: ${{ .steps.getNodejsAgents.outputs.results | tostring }}
+      selectors:
+        - name: csv
+          expression: .csv
+  
+  # Infra agents
+  - name: getInfraAgents
+    type: action
+    action: newrelic.nrdb.query
+    version: 1
+    inputs:
+      accountIds:
+        - ${{ .workflowInputs.accountId }}
+      query: >-
+        FROM OutdatedAgents SELECT latest(accountName) as 'account',
+        latest(account_id) as 'accountId', latest(agentType) as 'agentType',
+        latest(entityName) as 'entity', latest(currentVersion) as 'currentVersion',
+        latest(currentVersionAgeInDays) as 'currentVersionAgeInDays',
+        latest(latestVersion) as 'latestVersion', latest(team) as 'team'
+        WHERE agentType = 'INFRASTRUCTURE'
+        FACET entityGuid as 'guid' SINCE 1 day ago LIMIT MAX
+      selectors:
+        - name: results
+          expression: '[.results[] | del(.facet)]'
+  - name: transformInfraToCsv
+    type: action
+    action: utils.transform.toCSV
+    version: 1
+    inputs:
+      data: ${{ .steps.getInfraAgents.outputs.results | tostring }}
       selectors:
         - name: csv
           expression: .csv
@@ -130,4 +159,8 @@ steps:
           type: RAW
           filename: outdated_agents_NODEJS.csv
           content: ${{ .steps.transformNodejsToCsv.outputs.csv }}
+        - name: outdated_agents_infra
+          type: RAW
+          filename: outdated_agents_INFRA.csv
+          content: ${{ .steps.transformInfraToCsv.outputs.csv }}
     next: end
