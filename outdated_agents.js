@@ -9,8 +9,8 @@ const zlib = require('zlib');
 /* --------------------------------------------------------- */
 
 /* -------------------CONFIGURATION----------------- */
-const USER_KEY = "<user key>"; // User key to fetch data via GraphQL (NOTE: make this a secure credential)
-const INGEST_KEY = "<ingest key>"; // Ingest key to write events to NR [Keagan-Playground] (NOTE: make this a secure credential)
+const USER_KEY = "<user key>"; // User key to fetch data via GraphQL (NOTE: make this a secure credential in Synthetics)
+const INGEST_KEY = "<ingest key>"; // Ingest key to write events to NR (NOTE: make this a secure credential in Synthetics)
 const ACCOUNT_ID = 1; // Account ID to report events to
 
 // list of agents to check for outdated versions, comment out specific lines to exclude certain agents from the check
