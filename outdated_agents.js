@@ -299,7 +299,7 @@ function processData(entities, agentVersions, latestVersions) {
             let anOutdatedAgent = {
                 eventType: EVENT_TYPE,
                 accountName: entity.account.name || null,
-                accountId: entity.account.id || null,
+                account_id: entity.account.id || null,
                 domain: entity.domain || null,
                 agentType: currentVersionDetail?.agentName,
                 entityName: entity.name || null,
