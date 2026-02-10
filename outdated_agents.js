@@ -202,6 +202,11 @@ function _buildEntitySearchFilter(domain) {
         filterParts.push(`domain = '${domain}'`);
     }
 
+    // Infra domain includes containers, k8s, aws entities - we only want hosts with agents.
+    if (domain === 'INFRA') {
+        filterParts.push(`type = 'HOST'`);
+    }
+
     // APM language filters (only apply if domain is APM)
     if (domain === 'APM') {
         const apmAgents = AGENTS.filter(a => a.domain === 'APM');
